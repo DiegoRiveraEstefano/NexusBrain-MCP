@@ -2,6 +2,7 @@
 Central application configuration.
 Uses Pydantic Settings for type validation and loading from the .env file.
 """
+
 from typing import Literal
 from unittest import case
 
@@ -38,10 +39,14 @@ class Settings(BaseSettings):
     surreal_database: str = Field(default="graphrag", alias="SURREAL_DB")
 
     # Models and AI Configuration (Ollama / HuggingFace)
-    embedding_service: Literal["ollama", "huggingface"] = Field(default="huggingface", alias="EMBEDDING_SERVICE")
+    embedding_service: Literal["ollama", "huggingface"] = Field(
+        default="huggingface", alias="EMBEDDING_SERVICE"
+    )
     ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")
-    embedding_model: str = Field(default="sentence-transformers/all-MiniLM-L6-v2", alias="EMBEDDING_MODEL")
-
+    embedding_model: str = Field(
+        default="sentence-transformers/all-MiniLM-L6-v2", alias="EMBEDDING_MODEL"
+    )
+    max_thread_pool_workers: int = Field(default=2, alias="MAX_THREAD_POOL_WORKERS")
 
     class Meta:
         env_file = ".env"

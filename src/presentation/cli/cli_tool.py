@@ -29,6 +29,7 @@ click.rich_click.COMMAND_GROUPS = {
     ]
 }
 
+
 @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.version_option("1.0.0", prog_name="NexusBrain")
 def cli():
@@ -38,15 +39,22 @@ def cli():
     """
     pass
 
+
 @cli.command()
 @click.argument("repo_path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
 def ingest(repo_path: str):
     """Ingests a repository into the database and builds the Knowledge Graph."""
-    console.print(Panel.fit(f"[bold magenta] Starting NexusBrain MCP Ingestion[/bold magenta]\n[dim]Target: {repo_path}[/dim]"))
+    console.print(
+        Panel.fit(
+            f"[bold magenta] Starting NexusBrain MCP Ingestion[/bold magenta]\n[dim]Target: {repo_path}[/dim]"
+        )
+    )
 
     service = IngestionService()
 
-    with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
+    with Progress(
+        SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
+    ) as progress:
         task1 = progress.add_task("[cyan]Phase 1: Scanning files...", total=None)
         task2 = None
         task3 = None
@@ -55,23 +63,41 @@ def ingest(repo_path: str):
         def progress_callback(event: str, count: int, total: int):
             nonlocal task1, task2, task3, task4
             if event == "scan_done":
-                progress.update(task1, description=f"[green]✔ Phase 1 completed: {count} files found.")
-                task2 = progress.add_task("[cyan]Phase 2: Processing AST and extracting dependencies...", total=None)
+                progress.update(
+                    task1, description=f"[green]✔ Phase 1 completed: {count} files found."
+                )
+                task2 = progress.add_task(
+                    "[cyan]Phase 2: Processing AST and extracting dependencies...", total=None
+                )
             elif event == "process_done":
-                progress.update(task2, description=f"[green]✔ Phase 2 completed: {count} logical chunks extracted.")
-                task3 = progress.add_task("[cyan]Phase 3: Generating embeddings and inserting into SurrealDB...", total=None)
+                progress.update(
+                    task2,
+                    description=f"[green]✔ Phase 2 completed: {count} logical chunks extracted.",
+                )
+                task3 = progress.add_task(
+                    "[cyan]Phase 3: Generating embeddings and inserting into SurrealDB...",
+                    total=None,
+                )
             elif event == "index_done":
-                progress.update(task3, description=f"[green]✔ Phase 3 completed: Nodes saved in database.")
-                task4 = progress.add_task("[cyan]Phase 4: Weaving the Relations Graph...", total=None)
+                progress.update(
+                    task3, description=f"[green]✔ Phase 3 completed: Nodes saved in database."
+                )
+                task4 = progress.add_task(
+                    "[cyan]Phase 4: Weaving the Relations Graph...", total=None
+                )
             elif event == "graph_done":
-                progress.update(task4, description=f"[green]✔ Phase 4 completed: {count} edges created.")
+                progress.update(
+                    task4, description=f"[green]✔ Phase 4 completed: {count} edges created."
+                )
 
         try:
             result = asyncio.run(service.run_ingestion(repo_path, progress_callback))
             if result.get("status") == "empty":
                 console.print("[yellow]No valid files found to process.[/yellow]")
             else:
-                console.print(f"\n[bold green]✅ Ingestion completed successfully. The Central Brain is updated.[/bold green]")
+                console.print(
+                    f"\n[bold green]✅ Ingestion completed successfully. The Central Brain is updated.[/bold green]"
+                )
                 console.print(f"[dim]Total time: {result['time']:.2f} seconds[/dim]")
         except Exception as e:
             console.print(f"\n[bold red]❌ The process failed: {e}[/bold red]")
@@ -116,45 +142,63 @@ def view_graph():
 
         if edges:
             for edge in edges:
-                table_edges.add_row(str(edge.get("id", "")), str(edge.get("source_node", "")), "->", str(edge.get("target_node", "")))
+                table_edges.add_row(
+                    str(edge.get("id", "")),
+                    str(edge.get("source_node", "")),
+                    "->",
+                    str(edge.get("target_node", "")),
+                )
             console.print("\n", table_edges)
         else:
             console.print("\n[yellow]No DEPENDS_ON relations found.[/yellow]")
     except Exception as e:
-         console.print(f"[bold red]Error getting graph:[/bold red] {e}")
+        console.print(f"[bold red]Error getting graph:[/bold red] {e}")
 
 
 @cli.command()
 def simulate():
     """Interactive simulator for MCP reasoning flow."""
     console.print(Panel.fit("[bold magenta]🧠 NexusBrain MCP Simulator 🧠[/bold magenta]"))
-    query = Prompt.ask("\n[bold cyan]🗣️ User[/bold cyan]: What do you want to search in the code?",
-                       default="How do I connect to SurrealDB?")
+    query = Prompt.ask(
+        "\n[bold cyan]🗣️ User[/bold cyan]: What do you want to search in the code?",
+        default="How do I connect to SurrealDB?",
+    )
 
     service = GraphRAGService()
 
-    console.print(f"\n[dim]🤖 MCP reasoning: I need to find code related to '{query}'. Calling search_similar_code tool...[/dim]")
+    console.print(
+        f"\n[dim]🤖 MCP reasoning: I need to find code related to '{query}'. Calling search_similar_code tool...[/dim]"
+    )
     try:
         result = asyncio.run(service.simulate_query(query))
         best_match = result.get("best_match")
 
         if not best_match:
-            console.print("[red]No similar code found. Make sure you have ingested the project.[/red]")
+            console.print(
+                "[red]No similar code found. Make sure you have ingested the project.[/red]"
+            )
             return
 
         file_path = best_match.get("file_path")
-        console.print(Panel(
-            f"[bold green]🎯 Best match found (Similarity: {best_match.get('score', 0):.2f})[/bold green]\n"
-            f"[yellow]File:[/yellow] {file_path}\n"
-            f"[yellow]Node ID:[/yellow] {best_match.get('id')}\n\n"
-            f"[dim]{best_match.get('content')[:200]}...[/dim]",
-            title="🛠️ Tool: search_similar_code", border_style="green"
-        ))
+        console.print(
+            Panel(
+                f"[bold green]🎯 Best match found (Similarity: {best_match.get('score', 0):.2f})[/bold green]\n"
+                f"[yellow]File:[/yellow] {file_path}\n"
+                f"[yellow]Node ID:[/yellow] {best_match.get('id')}\n\n"
+                f"[dim]{best_match.get('content')[:200]}...[/dim]",
+                title="🛠️ Tool: search_similar_code",
+                border_style="green",
+            )
+        )
 
-        console.print(f"\n[dim]🤖 MCP reasoning: If the user modifies {file_path}, what else would break? Calling analyze_blast_radius...[/dim]")
+        console.print(
+            f"\n[dim]🤖 MCP reasoning: If the user modifies {file_path}, what else would break? Calling analyze_blast_radius...[/dim]"
+        )
         impacted_files = result.get("impacted_files", [])
 
-        console.print(f"\n[dim]🤖 MCP reasoning: What does {file_path} depend on to work? Calling get_dependencies...[/dim]")
+        console.print(
+            f"\n[dim]🤖 MCP reasoning: What does {file_path} depend on to work? Calling get_dependencies...[/dim]"
+        )
         dependencies = result.get("dependencies", [])
 
         table = Table(title=f"🕸️ Graph Analysis for: {file_path}", show_lines=True)
@@ -162,16 +206,20 @@ def simulate():
         table.add_column("🎯 Central Node", style="cyan", justify="center")
         table.add_column("📦 Dependencies (I need this)", style="green")
 
-        impact_str = "\n".join(set(impacted_files)) if impacted_files else "[dim]None detected[/dim]"
+        impact_str = (
+            "\n".join(set(impacted_files)) if impacted_files else "[dim]None detected[/dim]"
+        )
         deps_str = "\n".join(set(dependencies)) if dependencies else "[dim]None detected[/dim]"
 
         table.add_row(impact_str, f"[bold]{file_path}[/bold]", deps_str)
         console.print("\n", table)
 
         console.print("\n[bold magenta]🤖 Final AI response to the user:[/bold magenta]")
-        console.print(f"The code you are looking for is in `{file_path}`. Be careful when modifying it, because it will affect: {', '.join(set(impacted_files)) if impacted_files else 'no known critical file'} and requires {', '.join(set(dependencies)) if dependencies else 'no internal dependency'} to work.")
+        console.print(
+            f"The code you are looking for is in `{file_path}`. Be careful when modifying it, because it will affect: {', '.join(set(impacted_files)) if impacted_files else 'no known critical file'} and requires {', '.join(set(dependencies)) if dependencies else 'no internal dependency'} to work."
+        )
     except Exception as e:
-         console.print(f"[bold red]Simulation error:[/bold red] {e}")
+        console.print(f"[bold red]Simulation error:[/bold red] {e}")
 
 
 if __name__ == "__main__":

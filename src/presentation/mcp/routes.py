@@ -31,7 +31,8 @@ from src.core.consts import (
     TOOL_ERROR_TEMPLATE,
     UNKNOWN_DATE,
     UNKNOWN_ID,
-    UNKNOWN_PATH, INGEST_REPO_RESULT_TEMPLATE,
+    UNKNOWN_PATH,
+    INGEST_REPO_RESULT_TEMPLATE,
 )
 from src.core.logging import get_logger
 from src.core.services.ingestion_service import IngestionService
@@ -39,7 +40,10 @@ from src.core.services.ingestion_service import IngestionService
 # Import Concrete Services and Repositories
 from src.core.services.search_service import SearchService
 from src.core.services.memory_service import MemoryService
+
 from src.infrastructure.db.surreal_repository import SurrealGraphRepository, SurrealMemoryRepository
+
+print("a.2")
 from src.infrastructure.llm.factory import EmbeddingFactory
 
 logger = get_logger(__name__)
@@ -49,12 +53,15 @@ logger = get_logger(__name__)
 graph_repo = SurrealGraphRepository()
 memory_repo = SurrealMemoryRepository()
 
+
 def get_search_service() -> SearchService:
     # Created on demand to instantiate the EmbeddingProvider correctly (depends on config)
     return SearchService(graph_repo, EmbeddingFactory.create())
 
+
 def get_memory_service() -> MemoryService:
     return MemoryService(memory_repo)
+
 
 def register_routes(mcp: FastMCP):
 
@@ -151,7 +158,9 @@ def register_routes(mcp: FastMCP):
             return error_msg
 
     @mcp.tool()
-    async def record_decision(topic: str, rationale: str, related_code_id: str | None = None) -> str:
+    async def record_decision(
+        topic: str, rationale: str, related_code_id: str | None = None
+    ) -> str:
         """
         Records an architectural decision, the solution to a complex bug, or a business rule.
         """
@@ -168,7 +177,9 @@ def register_routes(mcp: FastMCP):
             response += RECORD_DECISION_TOPIC_TEMPLATE.format(topic=topic) + "\n"
 
             if related_code_id:
-                response += RECORD_DECISION_LINK_SUCCESS_TEMPLATE.format(related_code_id=related_code_id)
+                response += RECORD_DECISION_LINK_SUCCESS_TEMPLATE.format(
+                    related_code_id=related_code_id
+                )
 
             return response
         except Exception as e:
@@ -210,11 +221,8 @@ def register_routes(mcp: FastMCP):
         service = IngestionService()
         try:
             result = await service.run_ingestion(repo_path_str=repo_path)
-            return INGEST_REPO_RESULT_TEMPLATE.format(
-                **result
-            )
+            return INGEST_REPO_RESULT_TEMPLATE.format(**result)
         except Exception as e:
             error_msg = TOOL_ERROR_TEMPLATE.format(tool_name="ingest_path", error=str(e))
             logger.error("MCP.ingest_path.error", error=str(e))
             return error_msg
-

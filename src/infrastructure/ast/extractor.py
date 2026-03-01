@@ -13,6 +13,7 @@ from src.core.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class ASTExtractor:
     def __init__(self):
         self.py_language = Language(tspython.language())
@@ -25,7 +26,9 @@ class ASTExtractor:
             (call function: (attribute attribute: (identifier) @call.method))
         """)
 
-    def get_relationships(self, code_content: str, language_hint: str = "py") -> Dict[str, List[str]]:
+    def get_relationships(
+        self, code_content: str, language_hint: str = "py"
+    ) -> Dict[str, List[str]]:
         if not code_content.strip():
             return {"imports": [], "calls": []}
 
@@ -47,20 +50,43 @@ class ASTExtractor:
                             if not isinstance(nodes, list):
                                 nodes = [nodes]
                             for node in nodes:
-                                text = node.text.decode('utf8') if isinstance(node.text, bytes) else node.text
+                                text = (
+                                    node.text.decode("utf8")
+                                    if isinstance(node.text, bytes)
+                                    else node.text
+                                )
                                 # Filter generic Python built-in methods
-                                if text not in ("print", "len", "str", "int", "list", "dict", "set", "Exception", "super"):
+                                if text not in (
+                                    "print",
+                                    "len",
+                                    "str",
+                                    "int",
+                                    "list",
+                                    "dict",
+                                    "set",
+                                    "Exception",
+                                    "super",
+                                ):
                                     calls_set.add(text)
                 else:
                     captures = getattr(self.py_query, "captures", lambda x: [])(tree.root_node)
                     for node, capture_name in captures:
-                        text = node.text.decode('utf8') if isinstance(node.text, bytes) else node.text
-                        if text not in ("print", "len", "str", "int", "list", "dict", "set", "Exception", "super"):
+                        text = (
+                            node.text.decode("utf8") if isinstance(node.text, bytes) else node.text
+                        )
+                        if text not in (
+                            "print",
+                            "len",
+                            "str",
+                            "int",
+                            "list",
+                            "dict",
+                            "set",
+                            "Exception",
+                            "super",
+                        ):
                             calls_set.add(text)
             except Exception as e:
                 logger.debug("ASTExtractor.get_relationships.ast_error", error=str(e))
 
-        return {
-            "imports": imports,
-            "calls": sorted(list(calls_set))
-        }
+        return {"imports": imports, "calls": sorted(list(calls_set))}

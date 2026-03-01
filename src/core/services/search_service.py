@@ -5,6 +5,7 @@ from src.core.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class SearchService:
     """Application service to search and navigate the knowledge graph."""
 

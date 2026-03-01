@@ -18,7 +18,9 @@ class BaseRepository:
         """Gets the active connection to SurrealDB."""
         return await db_client.connect()
 
-    async def raw_query(self, query: str, vars: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    async def raw_query(
+        self, query: str, vars: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
         """
         Executes a raw SurrealQL query and extracts the results from the standard SurrealDB format.
         """

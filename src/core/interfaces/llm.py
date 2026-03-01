@@ -1,6 +1,7 @@
 from typing import List
 from abc import ABC, abstractmethod
 
+
 class IEmbeddingProvider(ABC):
     """
     Contract for Embedding providers (Ollama, HuggingFace, OpenAI, etc.).

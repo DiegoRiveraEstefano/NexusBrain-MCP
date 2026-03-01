@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 @dataclass
 class SemanticChunk:
     """Represents a code fragment with real structural meaning."""
+
     name: str  # Ex: "get_embeddings" or "DatabaseClient.connect"
     node_type: str  # Ex: "function", "class", "module_header"
     content: str  # The actual source code of the fragment
@@ -42,11 +43,13 @@ class ASTChunker:
     def _get_node_name(self, node: Node, source_bytes: bytes) -> str:
         """Extracts the name of a class or function by looking for its 'identifier' node."""
         for child in node.children:
-            if child.type == 'identifier':
-                return child.text.decode('utf8')
+            if child.type == "identifier":
+                return child.text.decode("utf8")
         return "anonymous"
 
-    def _walk_tree(self, node: Node, source_bytes: bytes, current_class: str = "") -> List[SemanticChunk]:
+    def _walk_tree(
+        self, node: Node, source_bytes: bytes, current_class: str = ""
+    ) -> List[SemanticChunk]:
         """
         Recursively walks the AST.
         If it finds a function, it extracts the whole function.
@@ -54,7 +57,7 @@ class ASTChunker:
         """
         chunks = []
 
-        if node.type == 'class_definition':
+        if node.type == "class_definition":
             # It's a class. Get its name.
             class_name = self._get_node_name(node, source_bytes)
 
@@ -62,25 +65,27 @@ class ASTChunker:
 
             # Walk the class body looking for methods (functions)
             for child in node.children:
-                if child.type == 'block':
+                if child.type == "block":
                     for statement in child.children:
                         # Pass the class name as context
-                        chunks.extend(self._walk_tree(statement, source_bytes, current_class=class_name))
+                        chunks.extend(
+                            self._walk_tree(statement, source_bytes, current_class=class_name)
+                        )
 
             # Prevent further walking of children outside the block
             return chunks
 
-        elif node.type == 'function_definition':
+        elif node.type == "function_definition":
             func_name = self._get_node_name(node, source_bytes)
             full_name = f"{current_class}.{func_name}" if current_class else func_name
 
             chunk = SemanticChunk(
                 name=full_name,
                 node_type="method" if current_class else "function",
-                content=node.text.decode('utf8'),
+                content=node.text.decode("utf8"),
                 start_line=node.start_point[0] + 1,
                 end_line=node.end_point[0] + 1,
-                parent_class=current_class
+                parent_class=current_class,
             )
             chunks.append(chunk)
 
@@ -95,7 +100,9 @@ class ASTChunker:
 
         return chunks
 
-    def get_semantic_chunks(self, code_content: str, language_hint: str = "py") -> List[Dict[str, Any]]:
+    def get_semantic_chunks(
+        self, code_content: str, language_hint: str = "py"
+    ) -> List[Dict[str, Any]]:
         """
         Main entry point. Parses code and returns chunks ready
         to be injected with context and vectorized.
@@ -106,15 +113,20 @@ class ASTChunker:
         # If the language is not Python (not yet supported in AST), we return the whole file
         # as a safe fallback.
         if language_hint not in ("py", "python"):
-            logger.debug("ASTChunker.get_semantic_chunks.unsupported_language_fallback", language=language_hint)
-            return [{
-                "name": "module",
-                "node_type": "file",
-                "content": code_content,
-                "start_line": 1,
-                "end_line": len(code_content.splitlines()),
-                "parent_class": ""
-            }]
+            logger.debug(
+                "ASTChunker.get_semantic_chunks.unsupported_language_fallback",
+                language=language_hint,
+            )
+            return [
+                {
+                    "name": "module",
+                    "node_type": "file",
+                    "content": code_content,
+                    "start_line": 1,
+                    "end_line": len(code_content.splitlines()),
+                    "parent_class": "",
+                }
+            ]
 
         source_bytes = bytes(code_content, "utf8")
         tree = self.parser.parse(source_bytes)
@@ -125,12 +137,14 @@ class ASTChunker:
         # Convert dataclasses to standard dictionaries for the pipeline
         results = []
         for chunk in semantic_chunks:
-            results.append({
-                "symbol_name": chunk.name,
-                "node_type": chunk.node_type,
-                "raw_content": chunk.content,
-                "start_line": chunk.start_line,
-                "end_line": chunk.end_line
-            })
+            results.append(
+                {
+                    "symbol_name": chunk.name,
+                    "node_type": chunk.node_type,
+                    "raw_content": chunk.content,
+                    "start_line": chunk.start_line,
+                    "end_line": chunk.end_line,
+                }
+            )
 
         return results

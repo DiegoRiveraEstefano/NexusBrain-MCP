@@ -39,7 +39,11 @@ class DatabaseClient:
             logger.info("DatabaseClient.connect.start", url=settings.surreal_url)
             self.db = AsyncSurreal(settings.surreal_url)
             await self.db.connect()
-            if not settings.surreal_url.startswith("file") or settings.surreal_url.startswith("surrealkv") or settings.surreal_url.startswith("mem"):
+            if (
+                not settings.surreal_url.startswith("file")
+                or settings.surreal_url.startswith("surrealkv")
+                or settings.surreal_url.startswith("mem")
+            ):
                 self._token = await self.db.signin(
                     {"username": settings.surreal_user, "password": settings.surreal_pass}
                 )

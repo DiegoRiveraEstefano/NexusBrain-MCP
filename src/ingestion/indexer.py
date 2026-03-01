@@ -23,7 +23,9 @@ async def insert_chunk(db: Any, chunk_data: Dict[str, Any]) -> Dict[str, str] | 
     try:
         result = await db.query(INGEST_CREATE_CODE_CHUNK_QUERY, chunk_data)
     except Exception as e:
-        logger.error("Indexer.insert_chunk.failed", error=str(e), file_path=chunk_data.get("file_path"))
+        logger.error(
+            "Indexer.insert_chunk.failed", error=str(e), file_path=chunk_data.get("file_path")
+        )
         return None
 
     records = []
@@ -34,7 +36,7 @@ async def insert_chunk(db: Any, chunk_data: Dict[str, Any]) -> Dict[str, str] | 
             # Format with 'result' wrapper
             if "result" in result[0]:
                 if result[0].get("status") == "ERR":
-                    logger.error("Indexer.insert_chunk.db_error", detail=result[0].get('detail'))
+                    logger.error("Indexer.insert_chunk.db_error", detail=result[0].get("detail"))
                     return None
                 records = result[0].get("result", [])
             else:

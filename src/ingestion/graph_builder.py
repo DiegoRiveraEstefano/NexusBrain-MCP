@@ -15,8 +15,7 @@ logger = get_logger(__name__)
 
 
 async def build_graph_edges(
-    file_to_ids: Dict[str, List[str]],
-    file_imports_map: Dict[str, List[str]]
+    file_to_ids: Dict[str, List[str]], file_imports_map: Dict[str, List[str]]
 ) -> int:
     """
     Builds the Graph using fuzzy resolution for module names.
@@ -51,12 +50,11 @@ async def build_graph_edges(
         for full_import_string in imported_modules:
             # Break down string for fuzzy search:
             # 'src.db.client.DatabaseClient' -> ['src', 'db', 'client', 'DatabaseClient']
-            parts = full_import_string.replace('/', '.').split('.')
+            parts = full_import_string.replace("/", ".").split(".")
 
             for part in parts:
                 # If any of the parts matches the name of a local file
                 if part in stem_to_ids and part != source_stem:
-
                     # The target will be the first chunk of the imported file (usually the header/main class)
                     target_id = stem_to_ids[part][0]
 
@@ -70,7 +68,12 @@ async def build_graph_edges(
                             )
                             edges_created += 1
                         except Exception as e:
-                            logger.error("GraphBuilder.build_graph_edges.create_edge_failed", source_id=source_id, target_id=target_id, error=str(e))
+                            logger.error(
+                                "GraphBuilder.build_graph_edges.create_edge_failed",
+                                source_id=source_id,
+                                target_id=target_id,
+                                error=str(e),
+                            )
 
                     # Break inner loop to not create duplicate relations
                     # if the import had the same name twice (e.g. db.db)

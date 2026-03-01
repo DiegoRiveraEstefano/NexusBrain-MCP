@@ -1,11 +1,14 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 
+
 class IGraphRepository(ABC):
     """Interface to interact with the graph and vector database."""
-    
+
     @abstractmethod
-    async def search_similar_code(self, query_vector: List[float], limit: int = 5) -> List[Dict[str, Any]]:
+    async def search_similar_code(
+        self, query_vector: List[float], limit: int = 5
+    ) -> List[Dict[str, Any]]:
         """Searches for code chunks by semantic similarity."""
         pass
 
@@ -19,11 +22,14 @@ class IGraphRepository(ABC):
         """Gets outgoing dependencies of a node."""
         pass
 
+
 class IMemoryRepository(ABC):
     """Interface to persist and search technical decisions."""
-    
+
     @abstractmethod
-    async def record_decision(self, topic: str, rationale: str, related_code_id: Optional[str] = None) -> Dict[str, Any]:
+    async def record_decision(
+        self, topic: str, rationale: str, related_code_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Records an architectural or code decision."""
         pass
 

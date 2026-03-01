@@ -14,9 +14,7 @@ from src.core.logging import get_logger
 logger = get_logger(__name__)
 
 
-async def process_file(
-    file_path: Path, repo_path: Path
-) -> Tuple[List[Dict[str, Any]], List[str]]:
+async def process_file(file_path: Path, repo_path: Path) -> Tuple[List[Dict[str, Any]], List[str]]:
     """
     Reads the file, extracts dependencies using the AST Manager and generates enriched chunks.
     """
@@ -34,8 +32,8 @@ async def process_file(
 
     # Extract basic spatial metadata
     path_parts = relative_path.split(os.sep)
-    directory = os.sep.join(path_parts[:-1]) if len(path_parts) > 1 else 'root'
-    lang_hint = extension.lstrip('.') if extension else 'text'
+    directory = os.sep.join(path_parts[:-1]) if len(path_parts) > 1 else "root"
+    lang_hint = extension.lstrip(".") if extension else "text"
 
     parser = ParserFactory.get_parser(extension)
     ast_chunks, relations = parser.parse(content, extension)
@@ -65,14 +63,16 @@ async def process_file(
         contextual_text = context_header + chunk["raw_content"]
 
         # Prepare the exact dictionary expected by the Indexer (SurrealDB)
-        processed_chunks.append({
-            "file_path": relative_path,
-            "content": contextual_text,  # Text the model will read and vectorize
-            "raw_content": chunk["raw_content"],  # Save raw code just in case
-            "symbol_name": symbol,
-            "node_type": node_type,
-            "embedding": []  # Empty list to be filled in the next phase
-        })
+        processed_chunks.append(
+            {
+                "file_path": relative_path,
+                "content": contextual_text,  # Text the model will read and vectorize
+                "raw_content": chunk["raw_content"],  # Save raw code just in case
+                "symbol_name": symbol,
+                "node_type": node_type,
+                "embedding": [],  # Empty list to be filled in the next phase
+            }
+        )
 
     return processed_chunks, file_imports
 

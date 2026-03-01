@@ -14,10 +14,13 @@ from src.core.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class SurrealGraphRepository(BaseRepository, IGraphRepository):
     """Implementation of IGraphRepository for SurrealDB."""
 
-    async def search_similar_code(self, query_vector: List[float], limit: int = 5) -> List[Dict[str, Any]]:
+    async def search_similar_code(
+        self, query_vector: List[float], limit: int = 5
+    ) -> List[Dict[str, Any]]:
         logger.debug("SurrealGraphRepository.search_similar_code.execute", limit=limit)
         return await self.raw_query(
             SEARCH_SIMILAR_CODE_QUERY, {"query_vector": query_vector, "limit": limit}
@@ -25,7 +28,9 @@ class SurrealGraphRepository(BaseRepository, IGraphRepository):
 
     async def analyze_blast_radius(self, node_id: str, depth: int = 2) -> List[Dict[str, Any]]:
         query = ANALYZE_BLAST_RADIUS_QUERY_TEMPLATE.format(node_id=node_id)
-        logger.debug("SurrealGraphRepository.analyze_blast_radius.execute", node_id=node_id, depth=depth)
+        logger.debug(
+            "SurrealGraphRepository.analyze_blast_radius.execute", node_id=node_id, depth=depth
+        )
         return await self.raw_query(query)
 
     async def get_dependencies(self, node_id: str) -> List[Dict[str, Any]]:
@@ -36,7 +41,9 @@ class SurrealGraphRepository(BaseRepository, IGraphRepository):
 class SurrealMemoryRepository(BaseRepository, IMemoryRepository):
     """Implementation of IMemoryRepository for SurrealDB."""
 
-    async def record_decision(self, topic: str, rationale: str, related_code_id: Optional[str] = None) -> Dict[str, Any]:
+    async def record_decision(
+        self, topic: str, rationale: str, related_code_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         result = await self.raw_query(
             RECORD_DECISION_QUERY, {"topic": topic, "rationale": rationale}
         )
@@ -49,7 +56,10 @@ class SurrealMemoryRepository(BaseRepository, IMemoryRepository):
                 log_id=log_id, related_code_id=related_code_id
             )
             await self.raw_query(query_rel)
-            logger.info("SurrealMemoryRepository.record_decision.linked_code", related_code_id=related_code_id)
+            logger.info(
+                "SurrealMemoryRepository.record_decision.linked_code",
+                related_code_id=related_code_id,
+            )
 
         logger.info("SurrealMemoryRepository.record_decision.success", topic=topic)
         return created_record
