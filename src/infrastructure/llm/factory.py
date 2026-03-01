@@ -1,10 +1,6 @@
 from src.core.interfaces.llm import IEmbeddingProvider
-
 from src.infrastructure.llm.huggingface_provider import HuggingFaceProvider
-
-print("a.3")
 from src.infrastructure.llm.ollama_provider import OllamaProvider
-
 from src.core.settings import settings
 
 

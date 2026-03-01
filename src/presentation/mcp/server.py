@@ -6,25 +6,13 @@ Manages the lifecycle of the HTTP/SSE connection using an ASGI server (Uvicorn).
 import asyncio
 import sys
 
-print("a")
 from mcp.server.fastmcp import FastMCP
-
-print("b")
 from src.core.consts import APP_NAME
-
-print("c")
 from src.core.logging import get_logger, setup_logging
-
-print("d")
 from src.core.settings import settings
-
-print("e")
 from src.db.client import db_client
-
-print("f")
 from src.presentation.mcp.routes import register_routes
 
-print("g")
 # Configure logging (now we can use stdout freely thanks to SSE)
 setup_logging()
 logger = get_logger(__name__)

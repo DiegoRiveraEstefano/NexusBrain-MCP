@@ -43,7 +43,6 @@ from src.core.services.memory_service import MemoryService
 
 from src.infrastructure.db.surreal_repository import SurrealGraphRepository, SurrealMemoryRepository
 
-print("a.2")
 from src.infrastructure.llm.factory import EmbeddingFactory
 
 logger = get_logger(__name__)

@@ -32,11 +32,9 @@ class ASTExtractor:
         if not code_content.strip():
             return {"imports": [], "calls": []}
 
-        # 🛡️ 1. IMPORTS: We use the infallible Regex engine
         imports = UniversalDependencyDetector.extract_imports(code_content)
         calls_set = set()
 
-        # 🧠 2. CALLS: We use AST to extract real execution flows
         if language_hint in ("py", "python"):
             try:
                 source_bytes = bytes(code_content, "utf8")
