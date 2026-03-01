@@ -10,6 +10,7 @@ from mcp.server.fastmcp import FastMCP
 
 from src.core.consts import APP_NAME
 from src.core.logging import get_logger, setup_logging
+from src.core.settings import settings
 from src.db.client import db_client
 from src.presentation.mcp.routes import register_routes
 
@@ -20,6 +21,8 @@ logger = get_logger(__name__)
 # Initialize FastMCP server in HTTP/SSE mode
 mcp = FastMCP(
     name=APP_NAME,
+    host=settings.host,
+    port=settings.port,
 )
 
 # Register all tools (routes)

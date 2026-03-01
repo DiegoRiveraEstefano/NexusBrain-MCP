@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     environment: str = Field(default="development", alias="ENVIRONMENT")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
+    # host and ports
+    port: int = Field(default=8000, alias="APP_PORT")
+    host: str = Field(default="0.0.0.0", alias="APP_HOST")
+
     # SurrealDB Configuration
     surreal_url: str = Field(default="file://data/database", alias="SURREAL_URL")
     surreal_user: str = Field(default="root", alias="SURREAL_USER")
