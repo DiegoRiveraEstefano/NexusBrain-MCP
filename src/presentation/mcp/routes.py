@@ -31,9 +31,10 @@ from src.core.consts import (
     TOOL_ERROR_TEMPLATE,
     UNKNOWN_DATE,
     UNKNOWN_ID,
-    UNKNOWN_PATH,
+    UNKNOWN_PATH, INGEST_REPO_RESULT_TEMPLATE,
 )
 from src.core.logging import get_logger
+from src.core.services.ingestion_service import IngestionService
 
 # Import Concrete Services and Repositories
 from src.core.services.search_service import SearchService
@@ -43,7 +44,7 @@ from src.infrastructure.llm.factory import EmbeddingFactory
 
 logger = get_logger(__name__)
 
-# Dependency instantiation (Ideally through a DI container, 
+# Dependency instantiation (Ideally through a DI container,
 # but doing it here to simplify for now)
 graph_repo = SurrealGraphRepository()
 memory_repo = SurrealMemoryRepository()
@@ -56,7 +57,7 @@ def get_memory_service() -> MemoryService:
     return MemoryService(memory_repo)
 
 def register_routes(mcp: FastMCP):
-    
+
     @mcp.tool()
     async def semantic_code_search(query: str, limit: int = 5) -> str:
         """
@@ -75,12 +76,12 @@ def register_routes(mcp: FastMCP):
                 file_path = match.get("file_path", UNKNOWN_PATH)
                 score = match.get("similarity_score", 0.0)
                 content = match.get("content", "")
-                
+
                 formatted_response += SEMANTIC_SEARCH_RESULT_ITEM_TEMPLATE.format(
                     index=idx, file_path=file_path, score=score
                 )
                 formatted_response += SEMANTIC_SEARCH_CODE_BLOCK_TEMPLATE.format(content=content)
-            
+
             return formatted_response
         except Exception as e:
             error_msg = TOOL_ERROR_TEMPLATE.format(tool_name="semantic_code_search", error=str(e))
@@ -201,5 +202,19 @@ def register_routes(mcp: FastMCP):
         except Exception as e:
             error_msg = TOOL_ERROR_TEMPLATE.format(tool_name="search_memory", error=str(e))
             logger.error("MCP.search_memory.error", error=str(e))
+            return error_msg
+
+    @mcp.tool()
+    async def ingest_path(repo_path: str):
+        logger.info("MCP.ingest_path.start", repo_path=repo_path)
+        service = IngestionService()
+        try:
+            result = await service.run_ingestion(repo_path_str=repo_path)
+            return INGEST_REPO_RESULT_TEMPLATE.format(
+                **result
+            )
+        except Exception as e:
+            error_msg = TOOL_ERROR_TEMPLATE.format(tool_name="ingest_path", error=str(e))
+            logger.error("MCP.ingest_path.error", error=str(e))
             return error_msg
 
