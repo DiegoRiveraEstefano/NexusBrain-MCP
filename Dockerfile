@@ -51,7 +51,6 @@ RUN mkdir -p /app/data/hf_cache /app/data/database /var/log && chmod -R 777 /app
 
 # 4. Copiar únicamente el código fuente y scripts necesarios (sin bash scripts extra)
 COPY src/ ./src/
-COPY scripts/ ./scripts/
 
 # 5. Variables de entorno de la aplicación.
 # NOTA: En modo embebido, usamos file:// con ruta absoluta. User y Pass ya no son estrictamente necesarios.
