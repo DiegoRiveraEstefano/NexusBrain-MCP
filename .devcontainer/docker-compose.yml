@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Tu entorno de desarrollo principal (Python)
+  app:
+    image: mcr.microsoft.com/devcontainers/python:3.13
+    # Mantiene el contenedor vivo para que VS Code / Cursor se conecte
+    command: sleep infinity
+    volumes:
+      # Monta el código fuente actual en el contenedor
+      - ../:/workspace:cached
+    # Permite al contenedor comunicarse con el Ollama de tu máquina host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+      # Apunta a la base de datos de desarrollo (el servicio de abajo)
+      - SURREAL_URL=ws://surrealdb:8000/rpc
+      - SURREAL_USER=root
+      - SURREAL_PASS=root
+      - SURREAL_NS=nexusbrain
+      - SURREAL_DB=graphrag_dev
+      # Apunta al Ollama de tu máquina real
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    depends_on:
+      - surrealdb
+
+  # Base de datos aislada para desarrollo y tests
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    command: start --log debug --user root --pass root file://data/dev.db
+    ports:
+      - "8000:8000"
+    volumes:
+      - surreal_dev_data:/data
+
+volumes:
+  surreal_dev_data:

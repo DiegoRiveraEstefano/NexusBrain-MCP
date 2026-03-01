@@ -1,0 +1,57 @@
+{
+  "name": "Nexus Brain Dev Env",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+
+  // Configuraciones de VS Code dentro del contenedor
+  "customizations": {
+    "jetbrains": {
+      "settings": {
+        "com.intellij:app:EditorSettings.is_ensure_newline_at_eof": true,
+        "com.intellij:app:GeneralSettings.autoSaveIfInactive": true,
+        "com.intellij:app:HttpConfigurable.use_proxy_pac": true
+      }
+    },
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.languageServer": "None",
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+          }
+        },
+        // Ruff config
+        "ruff.lint.args": ["--config=pyproject.toml"],
+        "ruff.format.args": ["--config=pyproject.toml"]
+      },
+      // Tus extensiones solicitadas
+      "extensions": [
+        "njpwerner.autodocstring",
+        "samuelcolvin.jinjahtml",
+        "cweijan.dbclient-jdbc",
+        "tamasfe.even-better-toml",
+        "cweijan.vscode-mysql-client2",
+        "ms-python.python",
+        "meta.pyrefly",
+        "ms-python.vscode-python-envs",
+        "charliermarsh.ruff",
+        "ms-python.debugpy",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/common-utils:1": {},
+    "ghcr.io/devcontainer-community/devcontainer-features/btop": {},
+    "ghcr.io/devcontainers/features/github-cli": {}
+  },
+  // Comando post-creación: Instala dependencias en modo editable
+  // Instala también ipykernel para poder usar Notebooks si es necesario
+  "postCreateCommand": "pip install -e .[dev,test] && ruff check src/",
+
+}

@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    user: root
+    command: start --log debug --user root --pass root rocksdb:/data/mydatabase.db
+    ports:
+      - "8000:8000"
+    volumes:
+      - surreal_dev_data:/data
+
+volumes:
+  surreal_dev_data:
