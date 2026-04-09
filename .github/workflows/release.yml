@@ -1,0 +1,56 @@
+name: Release NexusBrain MCP
+
+on:
+  push:
+    tags:
+      - 'v*' # Se activa al pushear tags como v0.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          version: "latest"
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies and Build
+        run: |
+          # Instalamos dependencias de compilación si son necesarias (como tree-sitter)
+          sudo apt-get update && sudo apt-get install -y build-essential
+          
+          # Construimos los artefactos (.whl y .tar.gz) usando uv
+          uv build
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## NexusBrain-MCP ${{ github.ref_name }}
+            
+            Cerebro Central local para IA con GraphRAG y SurrealDB.
+            
+            ### Instalación
+            ```bash
+            pip install <url_del_archivo_wheel>
+            ```
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
